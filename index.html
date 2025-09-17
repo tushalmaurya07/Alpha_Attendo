@@ -232,6 +232,28 @@
 
         .timestamp { color: var(--text-secondary); font-size: 0.8rem;
         }
+        
+        .session-code-display {
+            background-color: var(--primary-color);
+            color: white;
+            text-align: center;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-top: 1rem;
+        }
+        .session-code-display p {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 500;
+            opacity: 0.8;
+        }
+        .session-code-display h3 {
+            margin: 0.5rem 0 0 0;
+            font-size: 2.5rem;
+            font-weight: 700;
+            letter-spacing: 0.25rem;
+            color: white;
+        }
 
         .video-container {
             position: relative;
@@ -280,6 +302,13 @@
             width: 100%;
             background-color: var(--background-color);
             transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        input#classroom-code-input {
+            text-transform: uppercase;
+            text-align: center;
+            font-size: 1.5rem;
+            letter-spacing: 0.25rem;
+            font-weight: bold;
         }
         input:focus, select:focus, textarea:focus {
             outline: none;
@@ -583,6 +612,10 @@
                     <button class="btn" id="start-session-btn">Start Attendance Session</button>
                     <button class="btn" id="close-session-btn" disabled style="background-color: var(--error-color);">Close Session</button>
                     <div class="status-box" id="faculty-status">Session has not started.</div>
+                    <div id="session-code-container" style="display: none;" class="session-code-display">
+                        <p>Share this code with your students:</p>
+                        <h3 id="session-code-text"></h3>
+                    </div>
                 </div>
 
                 <div id="live-attendance-view" class="faculty-view-content">
@@ -899,12 +932,23 @@
                         <h3 id="student-welcome-header">Welcome!</h3>
                     </div>
                     <nav class="faculty-nav">
-                        <button class="nav-tab active" data-view="my-analytics">Absence Trends</button>
-                        <button class="nav-tab" data-view="attendance-list">Attendance List</button>
-                        <button class="nav-tab" data-view="active-session">Active Session</button>
+                        <button class="nav-tab active" data-view="active-session">Mark Attendance</button>
+                        <button class="nav-tab" data-view="attendance-list">My History</button>
+                        <button class="nav-tab" data-view="my-analytics">My Analytics</button>
                     </nav>
 
-                    <div id="my-analytics-view" class="student-view-content active">
+                    <div id="active-session-view" class="student-view-content active">
+                        <h3>Mark My Attendance</h3>
+                        <p>Get the 5-character code from your faculty and enter it below to mark your attendance.</p>
+                        <div class="form-group">
+                            <label for="classroom-code-input">Classroom Code</label>
+                            <input type="text" id="classroom-code-input" maxlength="5" placeholder="_ _ _ _ _">
+                        </div>
+                        <button class="btn" id="submit-code-btn">Submit Code</button>
+                        <div class="status-box" id="student-active-session-status" style="display: none;"></div>
+                    </div>
+
+                    <div id="my-analytics-view" class="student-view-content">
                         <div class="history-container">
                             <div class="filters-panel">
                                 <h4>Filters</h4>
@@ -962,11 +1006,6 @@
                         </div>
                     </div>
 
-                    <div id="active-session-view" class="student-view-content">
-                        <h3>Active Sessions for Your Class</h3>
-                        <ul id="student-active-session-list"></ul>
-                        <div class="status-box info" id="student-active-session-status" style="display: none;"></div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -1055,7 +1094,6 @@
         const saveManualAttendanceBtn = document.getElementById('save-manual-attendance-btn');
         const manualAttendanceStatus = document.getElementById('manual-attendance-status');
 
-
         // New elements for faculty viewing student history
         const facultyStudentHistoryView = document.getElementById('faculty-student-history-view');
         const facultyStudentHistoryHeader = document.getElementById('faculty-student-history-header');
@@ -1077,8 +1115,14 @@
         const studentHistoryEndDate = document.getElementById('student-history-end-date');
         const fetchStudentHistoryBtn = document.getElementById('fetch-student-history-btn');
         const studentHistoryTableBody = document.getElementById('student-history-table-body');
-        const studentActiveSessionList = document.getElementById('student-active-session-list');
         const studentActiveSessionStatus = document.getElementById('student-active-session-status');
+        
+        // New Classroom Code elements
+        const sessionCodeContainer = document.getElementById('session-code-container');
+        const sessionCodeText = document.getElementById('session-code-text');
+        const classroomCodeInput = document.getElementById('classroom-code-input');
+        const submitCodeBtn = document.getElementById('submit-code-btn');
+
         
         // Analytics DOM Elements
         const analyticsDateRange = document.getElementById('analytics-date-range');
@@ -1203,17 +1247,6 @@
                 const view = tab.getAttribute('data-view');
                 studentViews.forEach(v => v.classList.remove('active'));
                 document.getElementById(`${view}-view`).classList.add('active');
-                
-                if (view === 'active-session' && identifiedStudent) {
-                    findAndDisplayActiveSessions(identifiedStudent);
-                } else if (view === 'attendance-list' || view === 'my-analytics') {
-                    const today = new Date();
-                    const thirtyDaysAgo = new Date(new Date().setDate(today.getDate() - 30));
-                    const startDateInput = view === 'my-analytics' ? studentAnalyticsStartDate : studentHistoryStartDate;
-                    const endDateInput = view === 'my-analytics' ? studentAnalyticsEndDate : studentHistoryEndDate;
-                    endDateInput.value = today.toISOString().split('T')[0];
-                    startDateInput.value = thirtyDaysAgo.toISOString().split('T')[0];
-                }
             });
         });
         
@@ -1221,22 +1254,9 @@
             addStudentForm.style.display = addStudentForm.style.display === 'flex' ? 'none' : 'flex';
         });
         
-        // --- Geolocation Helper ---
-        function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
-            const R = 6371; // Radius of the earth in km
-            const dLat = deg2rad(lat2 - lat1);
-            const dLon = deg2rad(lon2 - lon1);
-            const a =
-                Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
-                Math.sin(dLon / 2) * Math.sin(dLon / 2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-            const d = R * c; // Distance in km
-            return d;
-        }
-
-        function deg2rad(deg) {
-            return deg * (Math.PI / 180);
+        // --- Helper Functions ---
+        const generateSessionCode = () => {
+            return Math.random().toString(36).substring(2, 7).toUpperCase();
         }
 
         // --- Core Logic ---
@@ -1431,14 +1451,20 @@
             onSnapshot(q, (snapshot) => {
                 activeSessionsForAdmin = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data()}));
                 if (snapshot.docs.length > 0) {
+                    const activeSession = snapshot.docs[0].data();
                     startSessionBtn.disabled = true;
                     closeSessionBtn.disabled = false;
                     liveAttendancePlaceholder.style.display = 'none';
+                    if (activeSession.sessionCode) {
+                        sessionCodeText.textContent = activeSession.sessionCode;
+                        sessionCodeContainer.style.display = 'block';
+                    }
                     listenToAttendance(snapshot.docs[0].id, presentList);
                 } else {
                     startSessionBtn.disabled = false;
                     closeSessionBtn.disabled = true;
                     presentList.innerHTML = '';
+                    sessionCodeContainer.style.display = 'none';
                     liveAttendancePlaceholder.style.display = 'block';
                 }
                 populateManualSessionSelector();
@@ -1530,48 +1556,32 @@
             });
         };
         
-        startSessionBtn.addEventListener('click', () => {
+        startSessionBtn.addEventListener('click', async () => {
             if (classRoster.length === 0) { alert('Please add students to the roster first.'); return; }
             const lectureName = lectureNameInput.value.trim();
             if(!lectureName) { alert('Please enter a lecture or lab name.'); return; }
             
-            updateFacultyStatus('Getting your location...', 'info');
+            updateFacultyStatus('Starting session...', 'info');
             startSessionBtn.disabled = true;
+            
+            const description = lectureDescriptionInput.value.trim();
+            const department = sessionDepartmentSelect.value;
+            const semester = sessionSemesterSelect.value;
+            const selectedDivisions = Array.from(document.querySelectorAll('#session-division-checkboxes input:checked')).map(cb => cb.value);
+            const sessionCode = generateSessionCode();
 
-            if (!navigator.geolocation) {
-                updateFacultyStatus('Geolocation is not supported by your browser.', 'error');
+            try {
+                await addDoc(collection(db, "sessions"), {
+                    classId: CLASS_ID, lectureName, description, department, semester, 
+                    divisions: selectedDivisions,
+                    sessionCode: sessionCode,
+                    isActive: true, createdAt: new Date()
+                });
+                updateFacultyStatus(`Session for "${lectureName}" is LIVE!`, 'success');
+            } catch (e) {
+                updateFacultyStatus('Could not start session in database.', 'error');
                 startSessionBtn.disabled = false;
-                return;
             }
-
-            navigator.geolocation.getCurrentPosition(
-                async (position) => {
-                    const { latitude, longitude } = position.coords;
-                    const description = lectureDescriptionInput.value.trim();
-                    const department = sessionDepartmentSelect.value;
-                    const semester = sessionSemesterSelect.value;
-                    const selectedDivisions = Array.from(document.querySelectorAll('#session-division-checkboxes input:checked')).map(cb => cb.value);
-
-                    updateFacultyStatus('Starting session...', 'info');
-                    try {
-                        await addDoc(collection(db, "sessions"), {
-                            classId: CLASS_ID, lectureName, description, department, semester, 
-                            divisions: selectedDivisions,
-                            facultyLatitude: latitude,
-                            facultyLongitude: longitude,
-                            isActive: true, createdAt: new Date()
-                        });
-                        updateFacultyStatus(`Session for "${lectureName}" is LIVE!`, 'success');
-                    } catch (e) {
-                        updateFacultyStatus('Could not start session in database.', 'error');
-                        startSessionBtn.disabled = false;
-                    }
-                },
-                () => {
-                    updateFacultyStatus('Unable to retrieve your location. Please enable location services.', 'error');
-                    startSessionBtn.disabled = false;
-                }
-            );
         });
 
         
@@ -1591,89 +1601,58 @@
             }
         });
         
-        const markStudentPresent = async (student, sessionId) => {
-             if (presentStudentIds.has(student.studentId)) {
-                studentActiveSessionStatus.textContent = `${student.name} is already marked present for this session.`;
-                studentActiveSessionStatus.className = 'status-box info';
-            } else {
-                try {
-                    await setDoc(doc(db, "sessions", sessionId, "presentStudents", student.id), {
-                        name: student.name, studentId: student.studentId, timestamp: new Date()
+        submitCodeBtn.addEventListener('click', async () => {
+            const code = classroomCodeInput.value.trim().toUpperCase();
+            if (code.length !== 5) {
+                studentActiveSessionStatus.textContent = 'Please enter a valid 5-character code.';
+                studentActiveSessionStatus.className = 'status-box error';
+                studentActiveSessionStatus.style.display = 'block';
+                return;
+            }
+            if (!identifiedStudent) {
+                 studentActiveSessionStatus.textContent = 'Error: Student not identified. Please go back and try again.';
+                studentActiveSessionStatus.className = 'status-box error';
+                studentActiveSessionStatus.style.display = 'block';
+                return;
+            }
+
+            studentActiveSessionStatus.textContent = 'Verifying code...';
+            studentActiveSessionStatus.className = 'status-box info';
+            studentActiveSessionStatus.style.display = 'block';
+
+            const q = query(collection(db, "sessions"), 
+                where("isActive", "==", true), 
+                where("sessionCode", "==", code),
+                where("department", "==", identifiedStudent.department),
+                where("semester", "==", identifiedStudent.semester)
+            );
+            const querySnapshot = await getDocs(q);
+
+            let sessionToMark = null;
+            querySnapshot.forEach(doc => {
+                const session = {id: doc.id, ...doc.data()};
+                if (session.divisions.length === 0 || session.divisions.includes(identifiedStudent.division)) {
+                    sessionToMark = session;
+                }
+            });
+
+            if (sessionToMark) {
+                 try {
+                    await setDoc(doc(db, "sessions", sessionToMark.id, "presentStudents", identifiedStudent.id), {
+                        name: identifiedStudent.name, studentId: identifiedStudent.studentId, timestamp: new Date()
                     });
-                    studentActiveSessionStatus.textContent = `Welcome, ${student.name}! Your attendance is marked.`;
+                    studentActiveSessionStatus.textContent = `Welcome, ${identifiedStudent.name}! Your attendance is marked.`;
                     studentActiveSessionStatus.className = 'status-box success';
+                    classroomCodeInput.value = '';
                 } catch(e) { 
                     studentActiveSessionStatus.textContent = 'Could not save attendance to database.';
                     studentActiveSessionStatus.className = 'status-box error';
                 }
-            }
-            studentActiveSessionList.innerHTML = '';
-            studentActiveSessionStatus.style.display = 'block';
-        }
-
-        const findAndDisplayActiveSessions = (student) => {
-            studentActiveSessionStatus.style.display = 'block';
-            studentActiveSessionStatus.textContent = 'Getting your location to find nearby sessions...';
-            studentActiveSessionStatus.className = 'status-box info';
-
-            if (!navigator.geolocation) {
-                studentActiveSessionStatus.textContent = 'Geolocation is not supported by your browser.';
+            } else {
+                studentActiveSessionStatus.textContent = 'Invalid or expired code for your class. Please check the code and try again.';
                 studentActiveSessionStatus.className = 'status-box error';
-                return;
             }
-
-            navigator.geolocation.getCurrentPosition(
-                async (position) => {
-                    const studentLat = position.coords.latitude;
-                    const studentLon = position.coords.longitude;
-                    
-                    studentActiveSessionStatus.textContent = 'Checking for active sessions...';
-                    
-                    const q = query(collection(db, "sessions"), 
-                        where("isActive", "==", true), 
-                        where("department", "==", student.department),
-                        where("semester", "==", student.semester)
-                    );
-                    const querySnapshot = await getDocs(q);
-                    
-                    const PROXIMITY_LIMIT_KM = 0.2; // 200 meters
-                    const nearbySessions = [];
-
-                    querySnapshot.forEach(doc => {
-                        const session = {id: doc.id, ...doc.data()};
-                        if (session.divisions.length === 0 || session.divisions.includes(student.division)) {
-                            if (session.facultyLatitude && session.facultyLongitude) {
-                                const distance = getDistanceFromLatLonInKm(studentLat, studentLon, session.facultyLatitude, session.facultyLongitude);
-                                if (distance <= PROXIMITY_LIMIT_KM) {
-                                    nearbySessions.push(session);
-                                }
-                            }
-                        }
-                    });
-
-                    studentActiveSessionList.innerHTML = '';
-                    if (nearbySessions.length === 0) {
-                        studentActiveSessionStatus.textContent = `No active session found for you near by you.`;
-                        studentActiveSessionStatus.className = 'status-box error';
-                        return;
-                    }
-
-                    studentActiveSessionStatus.textContent = 'Active session(s) found. Please select one to mark attendance.';
-                    studentActiveSessionStatus.className = 'status-box success';
-                    nearbySessions.forEach(session => {
-                        const listItem = document.createElement('li');
-                        const divisionText = session.divisions.length > 0 ? `(Divisions ${session.divisions.join(', ')})` : '(All Divisions)';
-                        listItem.textContent = `${session.lectureName} ${divisionText} at ${session.createdAt.toDate().toLocaleTimeString()}`;
-                        listItem.onclick = () => markStudentPresent(student, session.id);
-                        studentActiveSessionList.appendChild(listItem);
-                    });
-                },
-                () => {
-                    studentActiveSessionStatus.textContent = 'Unable to retrieve your location. Please enable location services to find sessions.';
-                    studentActiveSessionStatus.className = 'status-box error';
-                }
-            );
-        };
+        });
         
         const startFaceRecognitionForIdentification = async () => {
             updateStudentStatus('Starting camera to identify you...', 'info');
@@ -1721,7 +1700,8 @@
                              const thirtyDaysAgo = new Date(new Date().setDate(today.getDate() - 30));
                              studentAnalyticsEndDate.value = today.toISOString().split('T')[0];
                              studentAnalyticsStartDate.value = thirtyDaysAgo.toISOString().split('T')[0];
-                             updateStudentAnalyticsDashboard(identifiedStudent);
+                             studentHistoryEndDate.value = today.toISOString().split('T')[0];
+                             studentHistoryStartDate.value = thirtyDaysAgo.toISOString().split('T')[0];
                         }
                     }
                 }, 500);
@@ -2390,5 +2370,4 @@
     </script>
 </body>
 </html>
-
 
