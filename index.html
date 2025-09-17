@@ -1636,7 +1636,7 @@
                     );
                     const querySnapshot = await getDocs(q);
                     
-                    const PROXIMITY_LIMIT_KM = 0.1; // 100 meters
+                    const PROXIMITY_LIMIT_KM = 0.2; // 200 meters
                     const nearbySessions = [];
 
                     querySnapshot.forEach(doc => {
@@ -2390,4 +2390,5 @@
     </script>
 </body>
 </html>
+
 
