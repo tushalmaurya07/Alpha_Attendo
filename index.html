@@ -488,6 +488,50 @@
                 grid-template-columns: 1fr;
             }
         }
+        
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: none; /* Changed from flex */
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background-color: var(--panel-color);
+            padding: 2.5rem;
+            border-radius: 16px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 500px;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        .modal-header h3 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.75rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+        .modal-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 2rem;
+        }
+
 
     </style>
 </head>
@@ -499,7 +543,7 @@
     </div>
 
     <div id="role-selection">
-        <div class="header"><h1>Welcome to the System</h1><p>Please select your role to continue</p></div>
+        <div class="header"><h1>Welcome to the AlphaAttendo</h1><p>Please select your role to continue</p></div>
         <div class="role-card" id="select-faculty-btn">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" /></svg>
             <h2>Faculty</h2>
@@ -535,7 +579,7 @@
     <div id="app-container">
         <header class="header">
             <button id="back-btn" class="btn-small">Switch Role</button>
-            <h1>Automated Attendance System</h1>
+            <h1>Automated Attendance System(AlphaAttendo)</h1>
             <p>A live demonstration of Face-based Verification</p>
             <button id="sign-out-btn" class="btn-small" style="display: none;">Sign Out</button>
         </header>
@@ -551,7 +595,7 @@
                     <button class="nav-tab active" data-view="conduct-session">Conduct Session</button>
                     <button class="nav-tab" data-view="live-attendance">Live Attendance</button>
                     <button class="nav-tab" data-view="attendance-history">Attendance History</button>
-                    <button class="nav-tab" data-view="class-roster">Class Roster</button>
+                    <button class="nav-tab" data-view="class-roster">Student Data</button>
                     <button class="nav-tab" data-view="analytics">Analytics Dashboard</button>
                 </nav>
 
@@ -635,9 +679,9 @@
                 </div>
 
                 <div id="class-roster-view" class="faculty-view-content">
-                    <h3>Class Roster (View Only)</h3>
+                    <h3>Class Student Data (View Only)</h3>
                      <div class="form-group">
-                        <label for="faculty-roster-search-input">Search Roster</label>
+                        <label for="faculty-roster-search-input">Search Data</label>
                         <input type="text" id="faculty-roster-search-input" placeholder="Search by name, ID, or department...">
                     </div>
                     <div class="table-container">
@@ -659,7 +703,7 @@
                 <div id="faculty-student-history-view" class="faculty-view-content">
                     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
                         <h3 id="faculty-student-history-header" style="margin: 0;">Student Attendance History</h3>
-                        <button id="back-to-roster-btn" class="btn-small">Back to Roster</button>
+                        <button id="back-to-roster-btn" class="btn-small">Back to All Data</button>
                     </div>
                     <div class="table-container">
                         <table class="data-table">
@@ -765,49 +809,55 @@
 
                 <div id="manage-students-view" class="admin-view-content active">
                     <div class="roster-header">
-                        <h3>College Roster</h3>
+                        <h3>Whole Data</h3>
                         <button id="admin-show-add-student-form-btn" class="btn-small" style="background: var(--primary-color);">Add New Student</button>
                     </div>
                     <div class="add-student-form">
-                        <div class="form-group">
-                            <label for="student-name-input">Student Name</label>
-                            <input type="text" id="student-name-input" placeholder="e.g., Jane Doe">
-                        </div>
-                        <div class="form-group">
-                            <label for="student-id-input">Unique Student ID</label>
-                            <input type="text" id="student-id-input" placeholder="e.g., S2025001">
-                        </div>
-                        <div class="form-group">
-                            <label for="department-select">Department</label>
-                            <select id="department-select">
-                                <option value="IT">IT</option>
-                                <option value="CSE">CSE</option>
-                                <option value="ECE">ECE</option>
-                                <option value="Elect">Electrical</option>
-                                <option value="Mech">Mechanical</option>
-                                <option value="Automobiles">Automobiles</option>
-                                <option value="Civil">Civil</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="student-semester-select">Semester</label>
-                            <select id="student-semester-select">
-                                <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option>
-                            </select>
-                        </div>
-                         <div class="form-group">
-                            <label for="student-division-input">Division</label>
-                            <input type="text" id="student-division-input" placeholder="e.g., A, B">
-                        </div>
-                        <button class="btn-small" id="add-student-btn" style="background: var(--primary-color);">Capture Face & Add Student</button>
+                        <button class="btn-small" id="start-enroll-btn" style="background: var(--primary-color);">Step 1: Start Face Capture</button>
+                        <div id="enroll-status" class="status-box" style="display: none;"></div>
                         <div class="video-container" id="enroll-video-container">
                             <video id="enroll-video" autoplay muted playsinline></video>
                         </div>
-                        <button class="btn-small" id="capture-enroll-btn" style="display: none; background: var(--success-color); margin-top: 0.5rem;">Take Snapshot</button>
+                        <button class="btn-small" id="capture-enroll-btn" style="display: none; background: var(--success-color); margin-top: 0.5rem;">Step 2: Take Snapshot</button>
+                        
+                        <div class="add-student-details-form" style="display:none;">
+                             <h4>Step 3: Fill Student Details</h4>
+                             <div class="form-group">
+                                 <label for="student-name-input">Student Name</label>
+                                 <input type="text" id="student-name-input" placeholder="e.g., Jane Doe">
+                             </div>
+                             <div class="form-group">
+                                 <label for="student-id-input">Unique Student ID</label>
+                                 <input type="text" id="student-id-input" placeholder="e.g., S2025001">
+                             </div>
+                             <div class="form-group">
+                                 <label for="department-select">Department</label>
+                                 <select id="department-select">
+                                     <option value="IT">IT</option>
+                                     <option value="CSE">CSE</option>
+                                     <option value="ECE">ECE</option>
+                                     <option value="Elect">Electrical</option>
+                                     <option value="Mech">Mechanical</option>
+                                     <option value="Automobiles">Automobiles</option>
+                                     <option value="Civil">Civil</option>
+                                 </select>
+                             </div>
+                             <div class="form-group">
+                                 <label for="student-semester-select">Semester</label>
+                                 <select id="student-semester-select">
+                                     <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option>
+                                 </select>
+                             </div>
+                              <div class="form-group">
+                                 <label for="student-division-input">Division</label>
+                                 <input type="text" id="student-division-input" placeholder="e.g., A, B">
+                             </div>
+                             <button class="btn" id="submit-student-btn" style="margin-top: 1rem;">Add Student to Roster</button>
+                        </div>
                     </div>
 
                     <div class="form-group" style="margin-top: 2rem;">
-                        <label for="roster-search-input">Search Roster</label>
+                        <label for="roster-search-input">Search Data</label>
                         <input type="text" id="roster-search-input" placeholder="Search by name, ID, or department...">
                     </div>
                     <div class="table-container">
@@ -897,7 +947,7 @@
                     <span class="panel-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="32" height="32"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" /></svg></span>
                     <h2>Student Portal</h2>
                 </div>
-                <button class="btn" id="identify-me-btn">Identify Me...</button>
+                <button class="btn" id="identify-me-btn">Identify Me</button>
                 <div class="status-box" id="student-status">Click the button above to start verification.</div>
                 
                 <div class="video-container" id="attend-video-container">
@@ -982,6 +1032,51 @@
         </div>
     </div>
     
+    <!-- Edit Student Modal -->
+    <div id="edit-student-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Student Details</h3>
+                <button class="close-btn" id="close-edit-modal-btn">&times;</button>
+            </div>
+            <div class="form-group">
+                <label for="edit-student-name">Student Name</label>
+                <input type="text" id="edit-student-name">
+            </div>
+            <div class="form-group">
+                <label for="edit-student-id">Student ID</label>
+                <input type="text" id="edit-student-id">
+            </div>
+            <div class="form-group">
+                <label for="edit-department">Department</label>
+                <select id="edit-department">
+                    <option value="IT">IT</option>
+                    <option value="CSE">CSE</option>
+                    <option value="ECE">ECE</option>
+                    <option value="Elect">Electrical</option>
+                    <option value="Mech">Mechanical</option>
+                    <option value="Automobiles">Automobiles</option>
+                    <option value="Civil">Civil</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="edit-semester">Semester</label>
+                <select id="edit-semester">
+                    <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="edit-division">Division</label>
+                <input type="text" id="edit-division">
+            </div>
+            <div class="modal-actions">
+                <button id="cancel-edit-btn" class="btn-small">Cancel</button>
+                <button id="save-student-update-btn" class="btn" style="width: auto; margin: 0;">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+
     <script type="module">
         // --- Get Firebase services from global window object ---
         const { collection, addDoc, onSnapshot, doc, setDoc, query, deleteDoc, updateDoc, where, Timestamp, getDocs, getDoc, writeBatch } = window.firebase;
@@ -1024,7 +1119,10 @@
         const sessionDepartmentSelect = document.getElementById('session-department-select');
         const sessionSemesterSelect = document.getElementById('session-semester-select');
         const sessionDivisionCheckboxes = document.getElementById('session-division-checkboxes');
-        const addStudentBtn = document.getElementById('add-student-btn');
+        const startEnrollBtn = document.getElementById('start-enroll-btn');
+        const submitStudentBtn = document.getElementById('submit-student-btn');
+        const enrollStatus = document.getElementById('enroll-status');
+        const addStudentDetailsForm = document.querySelector('.add-student-details-form');
         const rosterTableBody = document.getElementById('roster-table-body');
         const facultyRosterTableBody = document.getElementById('faculty-roster-table-body');
         const rosterSearchInput = document.getElementById('roster-search-input');
@@ -1039,6 +1137,13 @@
         const facultyNavTabs = document.querySelectorAll('.faculty-nav > .nav-tab');
         const facultyViews = document.querySelectorAll('.faculty-view-content');
         const liveAttendancePlaceholder = document.getElementById('live-attendance-placeholder');
+        
+        // Edit Modal Elements
+        const editStudentModal = document.getElementById('edit-student-modal');
+        const closeEditModalBtn = document.getElementById('close-edit-modal-btn');
+        const cancelEditBtn = document.getElementById('cancel-edit-btn');
+        const saveStudentUpdateBtn = document.getElementById('save-student-update-btn');
+
 
         // Faculty Login Elements
         const facultyLoginContainer = document.getElementById('faculty-login-container');
@@ -1109,6 +1214,8 @@
         let attendanceListenerUnsubscribe = null;
         let identifiedStudent = null;
         let selectedHistorySessionId = null; 
+        let studentToEditId = null;
+        let capturedFaceDescriptor = null;
         const CLASS_ID = "CS101";
         let overallAttendanceChart, departmentAbsenceChart, dailyTrendsChart, studentAbsenceChart;
         let isModelsLoaded = false;
@@ -1219,7 +1326,11 @@
         });
         
         showAddStudentFormBtn.addEventListener('click', () => {
-            addStudentForm.style.display = addStudentForm.style.display === 'flex' ? 'none' : 'flex';
+            const isVisible = addStudentForm.style.display === 'flex';
+            addStudentForm.style.display = isVisible ? 'none' : 'flex';
+            if (!isVisible) {
+                resetEnrollmentForm();
+            }
         });
         
         // --- Geolocation Helper ---
@@ -1267,7 +1378,12 @@
             studentStatus.textContent = message;
             studentStatus.className = `status-box ${type}`;
         };
-        
+        const updateEnrollmentStatus = (message, type = 'info') => {
+            enrollStatus.textContent = message;
+            enrollStatus.className = `status-box ${type}`;
+            enrollStatus.style.display = 'block';
+        };
+
         const deleteStudent = async (studentDocId) => {
             if (confirm("Are you sure you want to delete this student?")) {
                 try {
@@ -1331,10 +1447,12 @@
                     const menu = document.createElement('ul');
                     menu.className = 'roster-menu';
                     menu.innerHTML = `
-                        <li onclick="alert('Edit functionality coming soon!')">Edit Student</li>
+                        <li class="edit">Edit Student</li>
                         <li class="delete">Delete Student</li>
                     `;
+                    menu.querySelector('.edit').onclick = () => openEditStudentModal(student);
                     menu.querySelector('.delete').onclick = () => deleteStudent(student.id);
+
                     menuBtn.onclick = (e) => {
                         e.stopPropagation();
                         document.querySelectorAll('.roster-menu.active').forEach(m => m.classList.remove('active'));
@@ -1352,63 +1470,22 @@
                 tableBody.appendChild(row);
             });
         };
-
-        const enrollStudent = async () => {
-            const name = studentNameInput.value.trim();
-            const studentId = studentIdInput.value.trim().toUpperCase();
-            const department = departmentSelect.value;
-            const semester = studentSemesterSelect.value;
-            const division = studentDivisionInput.value.trim().toUpperCase();
-            if (!name || !studentId || !division) {
-                alert("Please fill out all student details.");
-                return;
-            }
-            if (classRoster.some(s => s.studentId === studentId)) {
-                alert("Student ID already exists. Please enter a different unique ID.");
-                return;
-            }
-
-            updateFacultyStatus(`Please look at the camera, ${name}.`, 'info');
+        
+        // --- New Student Enrollment Flow ---
+        const startEnrollmentCapture = async () => {
+            updateEnrollmentStatus('Please look at the camera.', 'info');
             enrollVideoContainer.style.display = 'block';
             captureEnrollBtn.style.display = 'block';
-            addStudentBtn.disabled = true;
+            startEnrollBtn.style.display = 'none';
 
             try {
                 enrollVideo.srcObject = await navigator.mediaDevices.getUserMedia({ video: {} });
             } catch (err) {
-                updateFacultyStatus('Camera access denied.', 'error');
-                addStudentBtn.disabled = false; return;
+                updateEnrollmentStatus('Camera access denied.', 'error');
+                startEnrollBtn.style.display = 'block';
+                return;
             }
 
-            const cleanup = () => {
-                clearInterval(videoFeedInterval);
-                enrollVideo.srcObject?.getTracks().forEach(track => track.stop());
-                enrollVideoContainer.style.display = 'none';
-                captureEnrollBtn.style.display = 'none';
-                const canvas = enrollVideoContainer.querySelector('canvas');
-                if (canvas) canvas.remove();
-                addStudentBtn.disabled = false;
-            };
-            
-            captureEnrollBtn.onclick = async () => {
-                const detection = await faceapi.detectSingleFace(enrollVideo).withFaceLandmarks().withFaceDescriptor();
-                if (detection) {
-                    try {
-                        const descriptorAsObject = Object.assign({}, detection.descriptor);
-                        await addDoc(collection(db, "classes", CLASS_ID, "roster"), {
-                            name, studentId, department, semester, division,
-                            faceDescriptor: descriptorAsObject 
-                        });
-                        studentNameInput.value = ''; studentIdInput.value = ''; studentDivisionInput.value = '';
-                    } catch (e) {
-                         alert("Could not add student to database.");
-                    }
-                    cleanup();
-                } else {
-                    alert("No face detected. Please position yourself and try again.");
-                }
-            };
-            
             enrollVideo.onplaying = () => {
                 const canvas = faceapi.createCanvasFromMedia(enrollVideo);
                 enrollVideoContainer.append(canvas);
@@ -1425,7 +1502,91 @@
                 }, 300);
             };
         };
-        addStudentBtn.addEventListener('click', enrollStudent);
+
+        const captureEnrollmentSnapshot = async () => {
+            const detection = await faceapi.detectSingleFace(enrollVideo).withFaceLandmarks().withFaceDescriptor();
+            if (detection) {
+                capturedFaceDescriptor = Object.assign({}, detection.descriptor);
+                updateEnrollmentStatus('Face captured successfully! Please fill in the details below.', 'success');
+                
+                // Stop video feed and hide video elements
+                clearInterval(videoFeedInterval);
+                enrollVideo.srcObject?.getTracks().forEach(track => track.stop());
+                enrollVideoContainer.style.display = 'none';
+                const canvas = enrollVideoContainer.querySelector('canvas');
+                if (canvas) canvas.remove();
+                captureEnrollBtn.style.display = 'none';
+                
+                // Show the form for details
+                addStudentDetailsForm.style.display = 'block';
+
+            } else {
+                updateEnrollmentStatus("No face detected. Please position yourself and try again.", "error");
+            }
+        };
+
+        const submitNewStudent = async () => {
+            const name = studentNameInput.value.trim();
+            const studentId = studentIdInput.value.trim().toUpperCase();
+            const department = departmentSelect.value;
+            const semester = studentSemesterSelect.value;
+            const division = studentDivisionInput.value.trim().toUpperCase();
+            if (!name || !studentId || !division) {
+                alert("Please fill out all student details.");
+                return;
+            }
+            if (classRoster.some(s => s.studentId === studentId)) {
+                alert("Student ID already exists. Please enter a different unique ID.");
+                return;
+            }
+            if (!capturedFaceDescriptor) {
+                alert("No face has been captured. Please start over.");
+                return;
+            }
+            
+            updateEnrollmentStatus('Adding student to roster...', 'info');
+
+             try {
+                await addDoc(collection(db, "classes", CLASS_ID, "roster"), {
+                    name, studentId, department, semester, division,
+                    faceDescriptor: capturedFaceDescriptor
+                });
+                updateEnrollmentStatus('Student added successfully!', 'success');
+                setTimeout(() => {
+                    addStudentForm.style.display = 'none';
+                    resetEnrollmentForm();
+                }, 2000);
+            } catch (e) {
+                 updateEnrollmentStatus('Could not add student to database.', 'error');
+            }
+        };
+
+        const resetEnrollmentForm = () => {
+            clearInterval(videoFeedInterval);
+            if (enrollVideo.srcObject) {
+                enrollVideo.srcObject.getTracks().forEach(track => track.stop());
+            }
+            const canvas = enrollVideoContainer.querySelector('canvas');
+            if (canvas) canvas.remove();
+
+            enrollVideoContainer.style.display = 'none';
+            captureEnrollBtn.style.display = 'none';
+            addStudentDetailsForm.style.display = 'none';
+            startEnrollBtn.style.display = 'block';
+            enrollStatus.style.display = 'none';
+            
+            studentNameInput.value = '';
+            studentIdInput.value = '';
+            studentDivisionInput.value = '';
+
+            capturedFaceDescriptor = null;
+        };
+
+
+        startEnrollBtn.addEventListener('click', startEnrollmentCapture);
+        captureEnrollBtn.addEventListener('click', captureEnrollmentSnapshot);
+        submitStudentBtn.addEventListener('click', submitNewStudent);
+
 
         const listenForActiveSession = () => {
             const q = query(collection(db, "sessions"), where("isActive", "==", true));
@@ -1592,24 +1753,27 @@
             }
         });
         
-        const markStudentPresent = async (student, sessionId) => {
-             if (presentStudentIds.has(student.studentId)) {
-                studentActiveSessionStatus.textContent = `${student.name} is already marked present for this session.`;
-                studentActiveSessionStatus.className = 'status-box info';
-            } else {
-                try {
-                    await setDoc(doc(db, "sessions", sessionId, "presentStudents", student.id), {
-                        name: student.name, studentId: student.studentId, timestamp: new Date()
-                    });
-                    studentActiveSessionStatus.textContent = `Welcome, ${student.name}! Your attendance is marked.`;
-                    studentActiveSessionStatus.className = 'status-box success';
-                } catch(e) { 
-                    studentActiveSessionStatus.textContent = 'Could not save attendance to database.';
-                    studentActiveSessionStatus.className = 'status-box error';
-                }
-            }
-            studentActiveSessionList.innerHTML = '';
-            studentActiveSessionStatus.style.display = 'block';
+        const markStudentPresent = async (student, session) => {
+             const presentDocRef = doc(db, "sessions", session.id, "presentStudents", student.id);
+             const presentSnap = await getDoc(presentDocRef);
+
+             if (presentSnap.exists()) {
+                 studentActiveSessionStatus.textContent = `${student.name} is already marked present for this session.`;
+                 studentActiveSessionStatus.className = 'status-box info';
+             } else {
+                 try {
+                     await setDoc(presentDocRef, {
+                         name: student.name, studentId: student.studentId, timestamp: new Date()
+                     });
+                     studentActiveSessionStatus.textContent = `Welcome, ${student.name}! Your attendance is marked.`;
+                     studentActiveSessionStatus.className = 'status-box success';
+                 } catch(e) { 
+                     studentActiveSessionStatus.textContent = 'Could not save attendance to database.';
+                     studentActiveSessionStatus.className = 'status-box error';
+                 }
+             }
+             studentActiveSessionList.innerHTML = '';
+             studentActiveSessionStatus.style.display = 'block';
         }
 
         const findAndDisplayActiveSessions = (student) => {
@@ -1665,12 +1829,12 @@
                          studentActiveSessionStatus.textContent = 'Active session(s) found. Please select one to mark attendance.';
                          studentActiveSessionStatus.className = 'status-box success';
                          nearbySessions.forEach(session => {
-                            const listItem = document.createElement('li');
-                            const divisionText = session.divisions.length > 0 ? `(Divisions ${session.divisions.join(', ')})` : '(All Divisions)';
-                            listItem.textContent = `${session.lectureName} ${divisionText}`;
-                            listItem.onclick = () => markStudentPresent(student, session.id);
-                            studentActiveSessionList.appendChild(listItem);
-                        });
+                             const listItem = document.createElement('li');
+                             const divisionText = session.divisions.length > 0 ? `(Divisions ${session.divisions.join(', ')})` : '(All Divisions)';
+                             listItem.textContent = `${session.lectureName} ${divisionText}`;
+                             listItem.onclick = () => markStudentPresent(student, session);
+                             studentActiveSessionList.appendChild(listItem);
+                         });
                     } else if (distantSessions.length > 0) {
                         studentActiveSessionStatus.textContent = `An active session for your class was found, but you seem to be too far away. Please check your device's location settings and try again.`;
                         studentActiveSessionStatus.className = 'status-box error';
@@ -2402,6 +2566,59 @@
                 manualAttendanceStatus.style.display = 'block';
             }
         });
+
+        // --- Edit Student Modal Logic ---
+        window.openEditStudentModal = (student) => {
+            studentToEditId = student.id;
+            document.getElementById('edit-student-name').value = student.name;
+            document.getElementById('edit-student-id').value = student.studentId;
+            document.getElementById('edit-department').value = student.department;
+            document.getElementById('edit-semester').value = student.semester;
+            document.getElementById('edit-division').value = student.division;
+            editStudentModal.style.display = 'flex';
+        }
+
+        const closeEditModal = () => {
+            editStudentModal.style.display = 'none';
+            studentToEditId = null;
+        }
+
+        const saveStudentUpdate = async () => {
+            if (!studentToEditId) return;
+
+            const updatedData = {
+                name: document.getElementById('edit-student-name').value.trim(),
+                studentId: document.getElementById('edit-student-id').value.trim().toUpperCase(),
+                department: document.getElementById('edit-department').value,
+                semester: document.getElementById('edit-semester').value,
+                division: document.getElementById('edit-division').value.trim().toUpperCase(),
+            };
+
+            // Basic validation
+            if (!updatedData.name || !updatedData.studentId || !updatedData.division) {
+                alert("Name, ID, and Division cannot be empty.");
+                return;
+            }
+            
+            // Check for duplicate student ID (excluding the current student)
+            if (classRoster.some(s => s.studentId === updatedData.studentId && s.id !== studentToEditId)) {
+                alert("This Student ID is already in use by another student.");
+                return;
+            }
+
+            try {
+                const studentDocRef = doc(db, "classes", CLASS_ID, "roster", studentToEditId);
+                await updateDoc(studentDocRef, updatedData);
+                closeEditModal();
+            } catch (error) {
+                alert("Failed to update student details. Please try again.");
+                console.error("Update error:", error);
+            }
+        };
+
+        closeEditModalBtn.addEventListener('click', closeEditModal);
+        cancelEditBtn.addEventListener('click', closeEditModal);
+        saveStudentUpdateBtn.addEventListener('click', saveStudentUpdate);
         
         // --- Initialization ---
         async function initializeApp() {
